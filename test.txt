@@ -1,3 +1,30 @@
-this is
-a test
-file
+;file handling to replace the macro definitions in the place of their calls and taking care of the actual parameters as well
+.model small
+.data
+msg1 d6 10,13,"str1$"
+msg2 d6 10,13,"str2$"
+
+
+
+.code
+mov ax,@data
+mov ds,ax
+
+mov ax,5000h
+add ax,05h
+mov ah,01
+int 21h
+mov bl,08h
+mov ah,09h 
+lea dx, msg1 
+int 21h 
+add bl, 10 
+mov ah,09h 
+lea dx, msg2 
+int 21h 
+add bl, 20 
+
+mov ah,4ch
+int 21h
+end
+
