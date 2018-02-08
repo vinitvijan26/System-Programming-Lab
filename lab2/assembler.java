@@ -2,6 +2,9 @@ import java.io.*;
 
 //always use .equals to compare strings in java instead of ==
 //SYMTAB - To access, start with 1 as symptr and not 0
+
+//Done by - Vinit Vijan 151614 C19
+
 public class assembler{
     public static void main(String[] args){
         try{
