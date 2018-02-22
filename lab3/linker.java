@@ -2,10 +2,20 @@ import java.io.*;
 
 //always use .equals to compare strings in java instead of ==
 //SYMTAB - To access, start with 1 as symptr and not 0
-public class assembler{
+public class linker{
     public static void main(String[] args){
         try{
-            File file = new File("ass2.asm");
+            String PBTAB[][] = new String[20][3];
+            String EXTTAB[][] = new String[20][2];
+            String OPTAB[][] = {{"STOP","1","0","1"},{"ADD","1","1","1"},{"SUB","1","2","1"},
+            {"MULT","1","3","1"},{"MOVER","1","4","1"},{"MOVEM","1","5","1"},{"COMP","1","6","1"},
+            {"BC","1","7","1"},{"DIV","1","8","1"},{"READ","1","9","1"},{"PRINT","1","10","1"},
+            {"DC","2","0","1"},{"DS","2","1","1"},{"START","3","0","0"},{"ORIGIN","3","1","0"},
+            {"LTORG","3","2","0"},{"EQU","3","3","0"},{"END","3","4","0"},{"ENTRY","3","5","0"},
+            {"EXTRN","3","6","0"}};
+            int pbptr=0,extptr=0;
+
+            File file = new File("ass31.asm");
 			FileReader fileReader = new FileReader(file);
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
 			String str = "";
@@ -13,19 +23,20 @@ public class assembler{
 					"test2.txt"), true));
             writer.write(str);
 
+            File file2 = new File("ass32.asm");
+			FileReader fileReader2 = new FileReader(file2);
+			BufferedReader bufferedReader2 = new BufferedReader(fileReader2);
+			
+
             String line,str1,str2;
-            String OPTAB[][] = {{"STOP","1","0","1"},{"ADD","1","1","1"},{"SUB","1","2","1"},
-            {"MULT","1","3","1"},{"MOVER","1","4","1"},{"MOVEM","1","5","1"},{"COMP","1","6","1"},
-            {"BC","1","7","1"},{"DIV","1","8","1"},{"READ","1","9","1"},{"PRINT","1","10","1"},
-            {"DC","2","0","1"},{"DS","2","1","1"},{"START","3","0","0"},{"ORIGIN","3","1","0"},
-            {"LTORG","3","2","0"},{"EQU","3","3","0"},{"END","3","4","0"}};
             String SYMTAB[][] = new String[10][2];
             String LITTAB[][] = new String[10][2];
             String POOLTAB[][] = new String[10][2];
             LITTAB[0][0] = "-";LITTAB[0][1] = "-";        //wont deal with the 0th index, mostly
             POOLTAB[0][0] = "1";POOLTAB[0][1] = "0";        //wont deal with the 0th index, mostly
             POOLTAB[1][0] = "1";POOLTAB[1][1] = "0";
-            int m=0,i1=0,symptr=0,LC=0,i=0,flag2=0,litptr=1,poolptr=1,temp_cl,m1=0,t1=0,t2=0,flag3=0,addr=0,incr=0,count=0,j=0,i2=0,instsize=0,litptr2=1,poolptr2=1;
+            int m=0,i1=0,symptr=0,LC=0,i=0,flag2=0,litptr=1,poolptr=1,temp_cl,m1=0,t1=0,t2=0,flag3=0,
+            addr=0,incr=0,count=0,j=0,i2=0,instsize=0,litptr2=1,poolptr2=1;
                 
             while ((line = bufferedReader.readLine()) != null) {
                 String[] w = line.split("   ");
@@ -46,6 +57,12 @@ public class assembler{
                     }
                     if(flag2==1){
                         SYMTAB[i1][1]=Integer.toString(LC);
+                        for(i=0;i<pbptr;i++){
+                            if(w[0].equals(PBTAB[i][0])){
+                                PBTAB[i][1]=Integer.toString(LC);
+                                break;
+                            }
+                        }
                     }
                     else{       //it was a label, put it in the symtab
                         SYMTAB[symptr][0]=w[0];
@@ -57,7 +74,7 @@ public class assembler{
                 
                 i1=0;
                 //w[1] -> search in OPTAB, get the row no in i1.
-                for(i=0;i<18;i++){
+                for(i=0;i<20;i++){
                     if(w[1].equals(OPTAB[i][0])){
                         i1=i;
                         break;
@@ -75,6 +92,8 @@ public class assembler{
                     else{       //dealing with mnemonics with 2 operands here
                         String opr[] = w[2].split(",");
                         m1 = opr.length;        //has to be 2
+                        //System.out.println("m1 is "+m1);
+                        //System.out.println("I am "+LC);
                         str1 = opr[1].substring(0,1);
                         flag3=0;
                         if(str1.equals("=")){       //operand2 was a literal
@@ -159,13 +178,35 @@ public class assembler{
                         //addr=Integer.valueOf(SYMTAB[i1][1]);
                         SYMTAB[symptr-1][1]=SYMTAB[i1][1];
                     }
+                    else if(w[1].equals("ENTRY")){
+                        String par[] = w[2].split(",");
+                        m1=par.length;
+                        for(i=0;i<m1;i++){
+                            PBTAB[pbptr][0]=par[i];       //symbol name
+                            PBTAB[pbptr][1]="0";
+                            PBTAB[pbptr][2]="ass31.asm";
+                            pbptr++;
+                        }
+                        //PBTAB[pbptr][0]=w[2];
+                    }
+                    else if(w[1].equals("EXTRN")){
+                        String par[] = w[2].split(",");
+                        m1=par.length;
+                        for(i=0;i<m1;i++){
+                            EXTTAB[extptr][0]=par[i];       //symbol name
+                            EXTTAB[extptr][1]="ass31.asm";
+                            extptr++;
+                        }
+                        //EXTTAB[extptr][0]=
+                    }
                 }
 
                 
             }
             fileReader.close();
             
-            FileReader fileReader1 = new FileReader(file);
+            //Avoiding the pass2 here
+            /*FileReader fileReader1 = new FileReader(file);
 			BufferedReader bufferedReader1 = new BufferedReader(fileReader1);
             LC=0;poolptr2=1;litptr2=1;
             int MCCODE[][] = new int[30][4];        //machine code
@@ -349,12 +390,188 @@ public class assembler{
 
                 j++;
             }
+            fileReader1.close();*/
+            
+            String SYMTAB2[][] = new String[10][2];
+            String LITTAB2[][] = new String[10][2];
+            String POOLTAB2[][] = new String[10][2];
+            LITTAB2[0][0] = "-";LITTAB2[0][1] = "-";        //wont deal with the 0th index, mostly
+            POOLTAB2[0][0] = "1";POOLTAB2[0][1] = "0";        //wont deal with the 0th index, mostly
+            POOLTAB2[1][0] = "1";POOLTAB2[1][1] = "0";
+            int symptr3=0,litptr3=1,poolptr3=1,litptr4=1,poolptr4=1;
+            m=0;i1=0;LC=0;i=0;flag2=0;m1=0;t1=0;t2=0;flag3=0;addr=0;incr=0;count=0;j=0;i2=0;instsize=0;
+            while ((line = bufferedReader2.readLine()) != null) {
+                String[] w = line.split("   ");
+                m = w.length;
+                //for(i1=0;i1<m;i1++){
+                //    System.out.println(w[i1]);
+                //}
+                i1=0;
+                //CHECKING LABEL
+                if(w[0]!=""){       //label/symbol exists
+                    flag2=0;
+                    for(i=0;i<symptr3;i++){
+                        if(w[0].equals(SYMTAB2[i][0])){
+                            flag2=1;      //it was a symbol - put in the LC as its address
+                            i1=i;
+                            break;
+                        }
+                    }
+                    if(flag2==1){
+                        SYMTAB2[i1][1]=Integer.toString(LC);
+                        for(i=0;i<pbptr;i++){
+                            if(w[0].equals(PBTAB[i][0])){
+                                PBTAB[i][1]=Integer.toString(LC);
+                                break;
+                            }
+                        }
+                    }
+                    else{       //it was a label, put it in the symtab
+                        SYMTAB2[symptr3][0]=w[0];
+                        SYMTAB2[symptr3][1]=Integer.toString(LC);
+                        //System.out.println("Im a label, symptr-"+symptr+" r-"+SYMTAB[symptr][0]+" "+SYMTAB[symptr][1]);
+                        symptr3++;
+                    }
+                }
+                
+                i1=0;
+                //w[1] -> search in OPTAB, get the row no in i1.
+                for(i=0;i<20;i++){
+                    if(w[1].equals(OPTAB[i][0])){
+                        i1=i;
+                        break;
+                    }
+                }
+                temp_cl = Integer.valueOf(OPTAB[i1][1]);
+                if(temp_cl==1){     //Imperative statement
+                    if(w[1].equals("BC")){
+                        LC++;
+                    }
+                    else if(w[1].equals("STOP")){
+                        LC++;
+                    }
+                    //not doing read and print for now
+                    else{       //dealing with mnemonics with 2 operands here
+                        //System.out.println("I am "+w[1]+" i1 is "+i1+" I am "+w[0]);
+                        String opr[] = w[2].split(",");
+                        m1 = opr.length;        //has to be 2
+                        str1 = opr[1].substring(0,1);
+                        flag3=0;
+                        if(str1.equals("=")){       //operand2 was a literal
+                            t1=Integer.valueOf(POOLTAB2[poolptr3][0]);
+                            t2=litptr3-1;
+                            for(i=t1;i<=t2;i++){
+                                if(opr[1].equals(LITTAB2[i][0])){
+                                    flag3=1;
+                                    break;
+                                }
+                            }
+                            if(POOLTAB2[poolptr3][1].equals("0")||flag3==0){      //the literal hasnt appeared b4
+                                LITTAB2[litptr3][0]=opr[1];
+                                LITTAB2[litptr3][1]="-";      //this is filled when LTORG is encountered
+                                t1=Integer.valueOf(POOLTAB2[poolptr3][1]);
+                                t1++;
+                                POOLTAB2[poolptr3][1]=Integer.toString(t1);
+                                litptr3++;
+                            }
+                        }
+                        else{       //operand2 was either a symbol or a constant
+                            SYMTAB2[symptr3][0]=opr[1];
+                            SYMTAB2[symptr3][1]="-";
+                            //System.out.println("Im a symbol, symptr-"+symptr+" r-"+SYMTAB[symptr][0]+" "+SYMTAB[symptr][1]);
+                            symptr3++;
+                        }
+
+                        LC++;
+                    }
+                }
+                else if(temp_cl==2){        //DC or DS
+                    LC++;       //considering the size of all statements to be 1
+                }
+                else if(temp_cl==3){
+                    if(w[1].equals("LTORG")){
+                        //LITTAB[POOLTAB[poolptr][0]][1]=LC;
+                        t1=Integer.valueOf(POOLTAB[poolptr3][0]);
+                        t2=litptr3-1;
+                        for(i=t1;i<=t2;i++){
+                            LITTAB2[i][1]=Integer.toString(LC);
+                            LC++;
+                        }
+                        poolptr3++;
+                        POOLTAB2[poolptr3][0]=Integer.toString(litptr3);
+                        POOLTAB2[poolptr3][1]="0";
+                    }
+                    else if(w[1].equals("END")){
+                        t1=Integer.valueOf(POOLTAB2[poolptr3][0]);
+                        t2=litptr3-1;
+                        for(i=t1;i<=t2;i++){
+                            LITTAB2[i][1]=Integer.toString(LC);
+                            LC++;
+                        }
+                        poolptr3++;
+                        POOLTAB2[poolptr3][0]=Integer.toString(litptr3);
+                        POOLTAB2[poolptr3][1]="0";
+                        break;
+                    }
+                    else if(w[1].equals("START")){
+                        LC=Integer.valueOf(w[2]);
+                    }
+                    else if(w[1].equals("ORIGIN")){
+                        String par[] = w[2].split("\\+");
+                        for(i=0;i<symptr3;i++){
+                            if(par[0].equals(SYMTAB2[i][0])){
+                                i1=i;
+                                break;
+                            }
+                        }
+                        addr=Integer.valueOf(SYMTAB2[i1][1]);
+                        incr=Integer.valueOf(par[1]);
+                        addr+=incr;
+                        LC=addr;
+                    }
+                    else if(w[1].equals("EQU")){
+                        for(i=0;i<symptr3-1;i++){
+                            if(w[2].equals(SYMTAB2[i][0])){
+                                i1=i;
+                                break;
+                            }
+                        }
+                        //addr=Integer.valueOf(SYMTAB[i1][1]);
+                        SYMTAB2[symptr3-1][1]=SYMTAB2[i1][1];
+                    }
+                    else if(w[1].equals("ENTRY")){
+                        String par[] = w[2].split(",");
+                        m1=par.length;
+                        for(i=0;i<m1;i++){
+                            PBTAB[pbptr][0]=par[i];       //symbol name
+                            PBTAB[pbptr][1]="0";
+                            PBTAB[pbptr][2]="ass32.asm";
+                            pbptr++;
+                        }
+                        //PBTAB[pbptr][0]=w[2];
+                    }
+                    else if(w[1].equals("EXTRN")){
+                        String par[] = w[2].split(",");
+                        m1=par.length;
+                        for(i=0;i<m1;i++){
+                            EXTTAB[extptr][0]=par[i];       //symbol name
+                            EXTTAB[extptr][1]="ass32.asm";
+                            extptr++;
+                        }
+                        //EXTTAB[extptr][0]=
+                    }
+                }
+
+                
+            }
+            fileReader2.close();
+
+            
 
 
-            fileReader1.close();
             writer.close();
 
-            System.out.println("SYMBOL TABLE:");
+            /*System.out.println("SYMBOL TABLE 1:");
             System.out.println("Symbol  Address");
             t1=0;t2=0;
             for(t1=1;t1<symptr;t1++){
@@ -365,7 +582,7 @@ public class assembler{
             }
             System.out.println();
 
-            System.out.println("LITERAL TABLE:");
+            System.out.println("LITERAL TABLE 1:");
             System.out.println("Literal  Address");
             t1=0;t2=0;
             for(t1=1;t1<litptr;t1++){
@@ -376,7 +593,7 @@ public class assembler{
             }
             System.out.println();
 
-            System.out.println("POOL TABLE:");
+            System.out.println("POOL TABLE 1:");
             System.out.println("First  #Literal");
             t1=0;t2=0;
             for(t1=1;t1<=poolptr;t1++){
@@ -387,7 +604,7 @@ public class assembler{
             }
             System.out.println();
 
-            System.out.println("M/C Code TABLE:");
+            /*System.out.println("M/C Code TABLE 1:");
             System.out.println("LC  Opcode  Register  Mem-Operand");
             t1=0;t2=0;
             for(t1=0;t1<=j;t1++){
@@ -397,6 +614,97 @@ public class assembler{
                 System.out.println();
             }
             System.out.println();
+
+            System.out.println("SYMBOL TABLE 2:");
+            System.out.println("Symbol  Address");
+            t1=0;t2=0;
+            for(t1=1;t1<symptr3;t1++){
+                for(t2=0;t2<2;t2++){
+                    System.out.print(SYMTAB2[t1][t2]+"     ");    
+                }
+                System.out.println();
+            }
+            System.out.println();
+
+            System.out.println("LITERAL TABLE 2:");
+            System.out.println("Literal  Address");
+            t1=0;t2=0;
+            for(t1=1;t1<litptr3;t1++){
+                for(t2=0;t2<2;t2++){
+                    System.out.print(LITTAB2[t1][t2]+"     ");    
+                }
+                System.out.println();
+            }
+            System.out.println();
+
+            System.out.println("POOL TABLE 2:");
+            System.out.println("First  #Literal");
+            t1=0;t2=0;
+            for(t1=1;t1<=poolptr3;t1++){
+                for(t2=0;t2<2;t2++){
+                    System.out.print(POOLTAB2[t1][t2]+"       ");    
+                }
+                System.out.println();
+            }
+            System.out.println();*/
+
+            System.out.println("PUBLIC TABLE:");
+            System.out.println("Symbol  Address  Filename");
+            t1=0;t2=0;
+            for(t1=0;t1<pbptr;t1++){
+                for(t2=0;t2<3;t2++){
+                    System.out.print(PBTAB[t1][t2]+"       ");    
+                }
+                System.out.println();
+            }
+            System.out.println();
+
+
+            System.out.println("EXTERN TABLE:");
+            System.out.println("Symbol  Filename");
+            t1=0;t2=0;
+            for(t1=0;t1<extptr;t1++){
+                for(t2=0;t2<2;t2++){
+                    System.out.print(EXTTAB[t1][t2]+"       ");    
+                }
+                System.out.println();
+            }
+            System.out.println();
+
+
+            flag3=0;
+            for(i=0;i<extptr;i++){
+                flag2=1;
+                for(j=0;j<pbptr;j++){
+                    if(EXTTAB[i][0].equals(PBTAB[j][0])){
+                        flag2=0;
+                        break;
+                    }
+                }
+                if(flag2==1){
+                    flag3=1;
+                    break;
+                }
+                //EXTTAB[i][0].equals(PBTAB[j][0])
+            }
+            if(flag3==1){
+                System.out.println("Linker Error");
+                System.out.println("");
+            }
+            else{
+                System.out.println("Linked successfully");
+            }
+
+            /*System.out.println("M/C Code TABLE 2:");
+            System.out.println("LC  Opcode  Register  Mem-Operand");
+            t1=0;t2=0;
+            for(t1=0;t1<=j;t1++){
+                for(t2=0;t2<4;t2++){
+                    System.out.print(MCCODE[t1][t2]+"      ");    
+                }
+                System.out.println();
+            }
+            System.out.println();*/
         }
         catch (IOException e) {
 			e.printStackTrace();
